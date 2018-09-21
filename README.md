@@ -22,6 +22,11 @@ For MacOS:
     brew services start rabbitmq
 
 ### Celery
-Do not forget to run worker (from the project folder)
+Do not forget to run worker (from the project folder) with default hard 
+timeout 30 seconds
 
-    celery -E -A webui worker -l info --loglevel=INFO
+    celery -E -A webui worker -l info --time-limit 30 --loglevel=INFO
+    
+### Sentry
+Error and logs in [sentry](https://docs.sentry.io/).
+Again - overkill for the project, just for practice sake.
