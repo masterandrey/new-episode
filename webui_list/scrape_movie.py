@@ -1,4 +1,4 @@
-from scraper.kinozal.scrape import scrape
+from scraper.kinozal.kinozal_scraper import scrape
 from webui_list.models import Movie
 
 def scrape_movie():

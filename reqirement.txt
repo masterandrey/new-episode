@@ -1,0 +1,6 @@
+hypothesis
+aiohttp
+django
+pytest
+pytest-aiohttp
+

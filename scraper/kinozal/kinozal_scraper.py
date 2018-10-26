@@ -1,10 +1,58 @@
-import scrapy
-from scrapy.loader.processors import Join, MapCompose, TakeFirst
-from scrapy.selector import Selector
-from scrapy.loader import ItemLoader
 import re
 from urllib.parse import urlsplit, parse_qs
 import urllib.parse
+from ..episodes_scraper import EpisodesScraper
+import aiohttp
+import re
+import collections
+
+
+class KinozalScraper(EpisodesScraper):
+    def __init__(self, host: str) -> None:
+        """
+        :param host: full host address, including proto and port.
+        Example:
+        """
+        self.host = host if re.match(r'\w+://', host) else 'http://' + host
+
+    def page_url(self, search_string: str, page: int):
+        """
+        Url of search result page
+        :param search_string: string to search
+        :param page: page number starting from 1
+        :return: url
+        """
+        url_parsed = urllib.parse.urlparse(
+            urllib.parse.urljoin(
+                self.host,
+                'browse.php'
+            )
+        )
+        url_parsed = url_parsed._replace(
+                query=urllib.parse.urlencode({
+                    's': search_string,
+                    'q': 0,
+                    'page': page
+                    })
+                )
+        return urllib.parse.urlunparse(url_parsed)
+
+    async def list_page(self, search_string: str) -> collections.AsyncIterable:
+        """
+        Iterate search result pages
+        :param search_string: string to search
+        :return: string with html of search result page
+        """
+        page = 1
+        headers = {}
+        #todo page++ if fail then exit
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(self.page_url(search_string, page)) as response:
+                yield await response.text()
+
+    async def episodes(self, search_string: str) -> dict:
+        async for page in self.list_page(search_string):
+            yield []
 
 
 KINOZAL_ID_PREFIX = 'ktv_'  # Prefix to uniqualize movies ids from different scraping sources
@@ -19,6 +67,8 @@ def size_processor(size_str):
         if size_str.endswith(mult):
             return int(float(size_str[:-len(mult)]) * MULT[mult])
     return int(size_str)
+
+
 
 
 def scrape(search_string, check_func):
