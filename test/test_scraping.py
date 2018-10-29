@@ -15,6 +15,9 @@ from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop, TestServer
 import aiohttp
 
 
+skip_all = True  # to run specific test we just skip all other tests
+
+
 async def list_handler(request):
     params = request.rel_url.query
     page = int(params['page'])
@@ -31,7 +34,7 @@ async def list_handler(request):
 async def details_handler(request):
     params = request.rel_url.query
     id = int(params['id'])
-    card_num = id // 5 + 1
+    card_num = id % 5 + 1
     response = aiohttp_jinja2.render_template(f'better_call_saul_card_{card_num}.html',
                                               request,
                                               {})
@@ -64,11 +67,11 @@ def search_string(request):
     return request.param
 
 
-@pytest.mark.skip
+@pytest.mark.skipif(skip_all, reason='Do not test this case')
 @given(page=st.integers(min_value=1, max_value=1000))
 def test_kinozal_url(host, search_string, page):
     s = KinozalScraper(host)
-    page_url = s.page_url(search_string, page)
+    page_url = s.search_list_url(search_string, page)
     parsed_url = urllib.parse.urlparse(page_url)
     assert parsed_url.scheme == '' or parsed_url.scheme.startswith('http')
     #assert parsed_url.netloc - could be empty or localhost, or example.com, no feasible way to test
@@ -79,6 +82,17 @@ def test_kinozal_url(host, search_string, page):
     assert search_string in itertools.chain.from_iterable(urllib.parse.parse_qsl(parsed_url.query))
 
 
+@pytest.mark.skipif(skip_all, reason='Do not test this case')
+@given(id=st.integers(min_value=100000, max_value=10000000))
+def test_details_url(host, id):
+    s = KinozalScraper(host)
+    page_url = s.details_url(f'details.php?id={id}')
+    parsed_url = urllib.parse.urlparse(page_url)
+    assert parsed_url.scheme == '' or parsed_url.scheme.startswith('http')
+    #assert parsed_url.netloc - could be empty or localhost, or example.com, no feasible way to test
+    assert parsed_url.path == '/details.php'
+
+
 class TestScraping(AioHTTPTestCase):
     async def get_application(self):
         return aioapp()
@@ -86,7 +100,7 @@ class TestScraping(AioHTTPTestCase):
     async def get_server(self, app):
         return TestServer(app, loop=self.loop, host='127.0.0.1', port=4433)
 
-    @pytest.mark.skip
+    @pytest.mark.skipif(skip_all, reason='Do not test this case')
     @unittest_run_loop
     async def test_list_page(self):
         scraper = KinozalScraper('localhost:4433')
@@ -95,6 +109,7 @@ class TestScraping(AioHTTPTestCase):
             page_count += 1
         assert page_count == 3, 'Test web-server returns exactly three pages with search results'
 
+    @pytest.mark.skipif(skip_all, reason='Do not test this case')
     def test_extract_episode(self):
         scraper = KinozalScraper('localhost:4433')
         page_html = open('test/better_call_saul_1.html', 'r').read()
@@ -110,8 +125,10 @@ class TestScraping(AioHTTPTestCase):
                 assert movie['last_season'] == 4
                 assert movie['last_episode'] == 10
                 assert movie['seasons'] == [4]
+                assert movie['torrent_link'] == 'http://dl.kinozal.tv/download.php?id=1638000'
         assert movies_count == 50
 
+    @pytest.mark.skipif(skip_all, reason='Do not test this case')
     @unittest_run_loop
     async def test_episodes(self):
         scraper = KinozalScraper('localhost:4433')
@@ -135,11 +152,33 @@ class TestScraping(AioHTTPTestCase):
                 assert movie['id'] == 'ktv_1453060'
         assert movies_count == 130
 
+    @pytest.mark.skipif(skip_all, reason='Do not test this case')
     def test_extract_details(self):
         scraper = KinozalScraper('localhost:4433')
         page_html = open('test/better_call_saul_card_1.html', 'r').read()
         movie = scraper.extract_details(page_html)
+        assert movie['audio'] == 'Русский (AC3, 6 ch, 640 Кбит/с), английский (E-AC3, 6 ch, 640 Кбит/с)'
+        assert movie['quality'] == 'WEBRip ( 2160p)'
+        assert movie['subtitles'] == 'Русские, английские'
+        assert movie['has_english_subtitles'] == True
+        assert movie['has_english_audio'] == True
 
+    @pytest.mark.skipif(skip_all, reason='Do not test this case')
+    @unittest_run_loop
+    async def test_details(self):
+        scraper = KinozalScraper('localhost:4433')
+        movie = await scraper.details('/details.php?id=1534654')
+        assert movie['audio'] == 'AC3, 2 ch, 192 Кбит/с'
+        assert movie['has_english_subtitles'] == False
+
+    @pytest.mark.skipif(skip_all, reason='Do not test this case')
+    @unittest_run_loop
+    async def test_find_episodes(self):
+        scraper = KinozalScraper('localhost:4433')
+        movies_count = 0
+        async for movie in scraper.find_episodes(search_string, season=3, min_episode=9):
+            movies_count += 1
+        assert movies_count == 36
 
 def run_fake_web_server():
     web.run_app(aioapp(), host='127.0.0.1', port=4433)
