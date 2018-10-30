@@ -12,17 +12,26 @@ import urllib.parse
 import pytest
 import itertools
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop, TestServer
-import aiohttp
+from aiohttp.web import HTTPNotFound
+import logging
 
 
-skip_all = True  # to run specific test we just skip all other tests
+skip_all = False # True  # to run specific test we just skip all other tests
+
+logging.basicConfig(filename='test_scraping.log', level=logging.DEBUG)
 
 
 async def list_handler(request):
+    """
+    Test web server.
+    Returns 3 pages of search result (does not depends on the actual search string)
+    :param request:
+    :return:
+    """
     params = request.rel_url.query
     page = int(params['page'])
     if page > 3:
-        raise Exception('No more list pages')
+        raise HTTPNotFound()
     response = aiohttp_jinja2.render_template(f'better_call_saul_{page}.html',
                                               request,
                                               {})
@@ -32,6 +41,10 @@ async def list_handler(request):
 
 
 async def details_handler(request):
+    """
+    Test web server.
+    For any movie details page request returns one of the 5 predefined pages.
+    """
     params = request.rel_url.query
     id = int(params['id'])
     card_num = id % 5 + 1
@@ -100,12 +113,18 @@ class TestScraping(AioHTTPTestCase):
     async def get_server(self, app):
         return TestServer(app, loop=self.loop, host='127.0.0.1', port=4433)
 
+    """
+    aiohttp test case is not pytest, but unittest. 
+    So we have to replace pytest fixtures
+    """
+    search_string = 'Better Call Saul'
+
     @pytest.mark.skipif(skip_all, reason='Do not test this case')
     @unittest_run_loop
     async def test_list_page(self):
         scraper = KinozalScraper('localhost:4433')
         page_count = 0
-        async for _ in scraper.list_page(search_string):
+        async for _ in scraper.list_page(self.search_string):
             page_count += 1
         assert page_count == 3, 'Test web-server returns exactly three pages with search results'
 
@@ -114,13 +133,13 @@ class TestScraping(AioHTTPTestCase):
         scraper = KinozalScraper('localhost:4433')
         page_html = open('test/better_call_saul_1.html', 'r').read()
         movies_count = 0
-        for movie in scraper.extract_episode(page_html):
+        for movie in scraper.extract_episode(page_html, 'fake_url'):
             movies_count += 1
             if movies_count == 2:
                 assert movie['title'] == 'Лучше звоните Солу (4 сезон: 1-10 серии из 10) / Better Call Saul / 2018 / ПД (Кубик в Кубе) / WEBRip (720p)'
                 assert movie['details_link'] == '/details.php?id=1638000'
                 assert movie['seeds_num'] == '15'
-                assert movie['size'] == 2
+                assert movie['size'] == 15190000000
                 assert movie['id'] == 'ktv_1638000'
                 assert movie['last_season'] == 4
                 assert movie['last_episode'] == 10
@@ -133,13 +152,13 @@ class TestScraping(AioHTTPTestCase):
     async def test_episodes(self):
         scraper = KinozalScraper('localhost:4433')
         movies_count = 0
-        async for movie in scraper.episodes(search_string):
+        async for movie in scraper.episodes(self.search_string):
             movies_count += 1
             if movies_count == 130:
                 assert movie['title'] == 'Лучше звоните Солу (1 сезон: 1-10 серии из 10) / Better Call Saul  / 2015 / ЛО (Kerob) / WEB-DLRip'
                 assert movie['details_link'] == '/details.php?id=1307895'
                 assert movie['seeds_num'] == '0'
-                assert movie['size'] == 9
+                assert movie['size'] == 4110000000
                 assert movie['id'] == 'ktv_1307895'
                 assert movie['last_season'] == 1
                 assert movie['last_episode'] == 10
@@ -148,7 +167,7 @@ class TestScraping(AioHTTPTestCase):
                 assert movie['title'] == 'Лучше звоните Солу (1-2 сезон) / Better Call Saul (Unofficial) / Soundtrack / 2015-2016 / MP3'
                 assert movie['details_link'] == '/details.php?id=1453060'
                 assert movie['seeds_num'] == '0'
-                assert movie['size'] == 3
+                assert movie['size'] == 637000000
                 assert movie['id'] == 'ktv_1453060'
         assert movies_count == 130
 
@@ -176,7 +195,7 @@ class TestScraping(AioHTTPTestCase):
     async def test_find_episodes(self):
         scraper = KinozalScraper('localhost:4433')
         movies_count = 0
-        async for movie in scraper.find_episodes(search_string, season=3, min_episode=9):
+        async for movie in scraper.find_episodes(self.search_string, season=3, min_episode=9):
             movies_count += 1
         assert movies_count == 36
 

@@ -32,7 +32,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django_celery_results',
     'webui_list.apps.WebuiListConfig',
     'raven.contrib.django.raven_compat',
     'django.contrib.admin',
@@ -41,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -121,11 +121,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-CELERY_RESULT_BACKEND = 'django-db'
-CELERY_IMPORTS = ('webui_list.tasks', )
-CELERYD_TASK_SOFT_TIME_LIMIT = 60
-#CELERY_IGNORE_RESULT = True
-
 import os
 import raven
 
@@ -141,7 +136,6 @@ RAVEN_CONFIG = {
 # client.captureException()
 
 from raven import Client
-from raven.contrib.celery import register_signal, register_logger_signal
 
 client = Client('https://278d7cda2f47460f92dad24d8a540560:8386405c0efc4aa18f4118aebc16fb07@sentry.io/1280826')
 
@@ -153,16 +147,11 @@ register_logger_signal(client)
 # Defaults to `logging.ERROR`
 register_logger_signal(client, loglevel=logging.INFO)
 
-# hook into the Celery error handler
-register_signal(client)
 
 # The register_signal function can also take an optional argument
 # `ignore_expected` which causes exception classes specified in Task.throws
 # to be ignored
 register_signal(client, ignore_expected=True)
-
-SENTRY_CELERY_LOGLEVEL = logging.INFO
-SENTRY_AUTO_LOG_STACKS = True
 
 LOGGING = {
     'version': 1,
@@ -170,11 +159,6 @@ LOGGING = {
     'root': {
         'level': 'WARNING',
         'handlers': ['sentry'],
-    },
-    'celery': {
-        'level': 'WARNING',
-        'handlers': ['sentry'],
-        'propagate': False,
     },
     'formatters': {
         'verbose': {
@@ -211,4 +195,14 @@ LOGGING = {
             'propagate': False,
         },
     },
+}
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'asgi_redis.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('localhost', 6379)],
+        },
+        'ROUTING': 'example_channels.routing.channel_routing',
+    }
 }

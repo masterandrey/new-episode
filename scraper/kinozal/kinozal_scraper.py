@@ -1,4 +1,3 @@
-import re
 from urllib.parse import urlsplit, parse_qs
 import urllib.parse
 from ..episodes_scraper import EpisodesScraper
@@ -6,7 +5,8 @@ import aiohttp
 import re
 import collections
 from lxml import html
-from lxml.etree import tostring
+from lxml.etree import tostring, ElementTree
+import logging
 
 
 class KinozalScraper(EpisodesScraper):
@@ -17,7 +17,7 @@ class KinozalScraper(EpisodesScraper):
         """
         self.host = host if re.match(r'\w+://', host) else 'http://' + host
 
-    def search_list_url(self, search_string: str, page: int):
+    def search_list_url(self, search_string: str, page: int) -> str:
         """
         Url of search result page
         :param search_string: string to search
@@ -39,7 +39,7 @@ class KinozalScraper(EpisodesScraper):
                 )
         return urllib.parse.urlunparse(url_parsed)
 
-    def details_url(self, link: str):
+    def details_url(self, link: str) -> str:
         """
         Url of the movie details.
         :param link: relative link from search results list
@@ -59,10 +59,12 @@ class KinozalScraper(EpisodesScraper):
         async with aiohttp.ClientSession() as session:
             page = 1
             while True:
-                response = await session.get(self.search_list_url(search_string, page))
+                url = self.search_list_url(search_string, page)
+                response = await session.get(url)
                 if response.status != 200:
+                    logging.error(f'Search result page: server returns error {response.status} for page {url}')
                     break
-                yield await response.text()
+                yield (await response.text(), url)
                 page += 1
 
     @staticmethod
@@ -91,27 +93,30 @@ class KinozalScraper(EpisodesScraper):
         return movie
 
     @staticmethod
-    def extract_episode(page_html) -> collections.Iterable:
+    def extract_episode(page_html: str, page_url: str) -> collections.Iterable:
         """
         Extracts episode data from search result page.
-        :param search_string:
+        :param page_html: the page text
+        :param page_url: the page url (just for logging purposes)
         :return: dict with extracted episode data
         """
         KINOZAL_ID_PREFIX = 'ktv_'  # Prefix to uniqualize movies ids from different scraping sources
 
-        def size_processor(size_str):
+        def size_processor(size: str) -> int:
+            """
+            :param size: string representation of size (for example 10 Гб)
+            :return: number of bytes
+            """
             MULT = {
                 ' МБ': 10 ** 6,
                 ' ГБ': 10 ** 9,
             }
             for mult in MULT:
-                if size_str.endswith(mult):
-                    return int(float(size_str[:-len(mult)]) * MULT[mult])
-            return int(size_str)
+                if size.endswith(mult):
+                    return int(float(size[:-len(mult)]) * MULT[mult])
+            return int(size)
 
-        tree = html.fromstring(page_html)
-        movies_selector = tree.xpath('.//table[contains(@class, "t_peer")]/tr')
-        for movie_selector in movies_selector:
+        def extract_line(movie_selector: ElementTree) -> dict:
             has_data_cells = movie_selector.xpath('.//td[@class="s"]/text()')
             if has_data_cells:
                 movie = {}
@@ -119,26 +124,51 @@ class KinozalScraper(EpisodesScraper):
                 movie['title'] = movie_selector.xpath(title_cell_xpath + '/text()')[0]
                 movie['details_link'] = movie_selector.xpath(title_cell_xpath + '/@href')[0]
                 movie['seeds_num'] = movie_selector.xpath('.//td[@class="sl_s"]/text()')[0]
-                movie['size'] = size_processor(movie_selector.xpath('.//td[@class="s"]/text()')[0])
+                movie['size'] = size_processor(movie_selector.xpath('.//td[@class="s"]/text()')[1])
                 details_link_parsed = urllib.parse.urlparse(movie['details_link'])
                 movie['id'] = KINOZAL_ID_PREFIX + parse_qs(details_link_parsed.query)['id'][0]
                 title_match = re.search(r'((\d+)-)?(\d+) сезон(ы)?: ((\d+)-)?(\d+) +сери(и|я) из (\d+)', movie['title'])
-                #assert title_match, f'Cannot parse title {movie["title"]}'
-                if title_match:
-                    try:
+                # assert title_match, f'Cannot parse title {movie["title"]}'
+                try:
+                    if title_match:
                         first_season = title_match.group(2)
                         movie['last_season'] = int(title_match.group(3))
                         movie['last_episode'] = int(title_match.group(7))
                         if not first_season:
                             first_season = movie['last_season']
                         movie['seasons'] = list(range(int(first_season), movie['last_season'] + 1))
-                    except ValueError:
-                        pass  # just suppress the exception and do not return fields that we could not convert
+                    else:
+                        raise ValueError('Season data signature was not found')
+                except ValueError as e:  # just suppress the exception and do not return fields that we could not convert
+                    logging.error(
+                        f'Cannot extract season data from title: "{movie["title"]}": \n{e}'
+                    )
                 download_link_parsed = urllib.parse.urlparse('http://dl.kinozal.tv/download.php')._replace(
                     query=details_link_parsed.query
                 )
                 movie['torrent_link'] = urllib.parse.urlunparse(download_link_parsed)
-                yield movie
+                return movie
+            else:
+                return {}
+
+        try:
+            tree = html.fromstring(page_html)
+            movies_selector = tree.xpath('.//table[contains(@class, "t_peer")]/tr')
+            for movie_selector in movies_selector:
+                try:
+                    movie = extract_line(movie_selector)
+                    if movie:
+                        yield movie
+                except Exception as e:
+                    logging.exception(
+                        f'Cannot extract movie data from line "{tostring(movie_selector) if movie_selector else None}", page {page_url}:\n{e}',
+                        exc_info=True
+                    )
+        except Exception as e:
+                logging.exception(
+                    f'Cannot extract movie data from list {page_url}:\n{e}',
+                    exc_info=True
+                )
 
     async def details(self, link: str) -> dict:
         async with aiohttp.ClientSession() as session:
@@ -155,9 +185,10 @@ class KinozalScraper(EpisodesScraper):
         :param search_string:
         :return: dicts with the episodes data
         """
-        async for page_html in self.list_page(search_string):
-            for movie in self.extract_episode(page_html):
-                yield movie
+        async for page_html, page_url in self.list_page(search_string):
+                for movie in self.extract_episode(page_html, page_url):
+                    if movie:
+                        yield movie
 
     async def find_episodes(self, search_string: str, season: int, min_episode: int) -> collections.AsyncIterable:
         """
@@ -168,8 +199,8 @@ class KinozalScraper(EpisodesScraper):
         :param min_episode:
         :return: dicts with the episodes data
         """
-        async for page_html in self.list_page(search_string):
-            for movie in self.extract_episode(page_html):
+        async for page_html, page_url in self.list_page(search_string):
+            for movie in self.extract_episode(page_html, page_url):
                 if 'seasons' in movie and season in movie['seasons'] and 'last_episode' in movie and min_episode <= movie['last_episode']:
                     movie.update(await self.details(movie['details_link']))
                     yield movie

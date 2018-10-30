@@ -4,3 +4,6 @@ django
 pytest
 pytest-aiohttp
 lxml
+channels
+asgi_redis
+raven
