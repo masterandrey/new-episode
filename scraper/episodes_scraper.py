@@ -1,5 +1,8 @@
 from abc import abstractmethod
-
+"""
+Episodes dicts should be in sync with webui_list/models.py 
+to save them with Django ORM transparently.
+"""
 
 class EpisodesScraper:
     """

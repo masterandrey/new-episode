@@ -7,15 +7,22 @@ import collections
 from lxml import html
 from lxml.etree import tostring, ElementTree
 import logging
+import asyncio
+import random
 
 
 class KinozalScraper(EpisodesScraper):
-    def __init__(self, host: str) -> None:
+    def __init__(self, host: str ='http://kinozal.tv', max_not_a_robot_delay=1.6) -> None:
         """
         :param host: full host address, including proto and port.
         Example:
         """
         self.host = host if re.match(r'\w+://', host) else 'http://' + host
+        self.max_not_a_robot_delay = max_not_a_robot_delay
+
+    async def i_am_not_a_robot_delay(self):
+        if self.max_not_a_robot_delay:
+            await asyncio.sleep(random.uniform(0.2, self.max_not_a_robot_delay))
 
     def search_list_url(self, search_string: str, page: int) -> str:
         """
@@ -60,6 +67,8 @@ class KinozalScraper(EpisodesScraper):
             page = 1
             while True:
                 url = self.search_list_url(search_string, page)
+                if page != 1:
+                    await self.i_am_not_a_robot_delay()
                 response = await session.get(url)
                 if response.status != 200:
                     logging.error(f'Search result page: server returns error {response.status} for page {url}')
@@ -171,7 +180,13 @@ class KinozalScraper(EpisodesScraper):
                 )
 
     async def details(self, link: str) -> dict:
+        """
+        Downloads and parse ep[isode details page
+        :param link: relative link to the page with details
+        :return: dict with detailes scraped from the page
+        """
         async with aiohttp.ClientSession() as session:
+            await self.i_am_not_a_robot_delay()
             response = await session.get(self.details_url(link))
             if response.status != 200:
                 return {}
@@ -194,6 +209,9 @@ class KinozalScraper(EpisodesScraper):
         """
         Loads all torrents that contain the season with minimum min_episode in them.
         Downloads details for them.
+
+        It's async but in fact that does not help and it does not download pages in parallel.
+        In some cases that's good - do not abuse the site we are scraping so it would not block us.
         :param search_string:
         :param season:
         :param min_episode:
@@ -204,3 +222,23 @@ class KinozalScraper(EpisodesScraper):
                 if 'seasons' in movie and season in movie['seasons'] and 'last_episode' in movie and min_episode <= movie['last_episode']:
                     movie.update(await self.details(movie['details_link']))
                     yield movie
+
+    async def find_episodes_parallel(self, search_string: str, season: int, min_episode: int, workers=5) -> collections.AsyncIterable:
+        """
+        The same as find_episode but can download a number of pages in parallel
+        :param workers: number of workers to download pages in parallel
+
+        Not sure we really need that - will abuse the torrent index site by parallel downloading and the site could block us.
+        And if we scrape by scheduler, beforehand, why should we bother about scraping speed at all?
+        """
+        # Implemetation plan
+        # Start in parallel one list scraping worker to add into queue episodes to download details
+        # (KinozalScraper.episodes() with additional logic from KinozalScraper.find_episodes() to check if we are
+        # interested in that episode).
+        # And <workers> number of detailes workers that take jobs from the queue and download details
+        # (KinozalScraper.details()).
+        # Yield movie dicts just as we get them from detail's workers.
+        # Wait for all tasks to complete.
+        # Unit-test should check if the workers really do their job in parallel (? set non-zero max_not_a_robot_delay
+        # and check that full time is less than number of episodes * max_not_a_robot_delay ? we better control min time as well).
+        raise Exception('Not implemented')

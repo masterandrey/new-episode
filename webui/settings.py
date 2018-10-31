@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'channels',
+#    'channels',
 ]
 
 MIDDLEWARE = [
@@ -135,23 +135,8 @@ RAVEN_CONFIG = {
 #
 # client.captureException()
 
-from raven import Client
-
-client = Client('https://278d7cda2f47460f92dad24d8a540560:8386405c0efc4aa18f4118aebc16fb07@sentry.io/1280826')
-
-# register a custom filter to filter out duplicate logs
-register_logger_signal(client)
-
-# The register_logger_signal function can also take an optional argument
-# `loglevel` which is the level used for the handler created.
-# Defaults to `logging.ERROR`
-register_logger_signal(client, loglevel=logging.INFO)
-
-
-# The register_signal function can also take an optional argument
-# `ignore_expected` which causes exception classes specified in Task.throws
-# to be ignored
-register_signal(client, ignore_expected=True)
+#from raven import Client
+#client = Client('https://278d7cda2f47460f92dad24d8a540560:8386405c0efc4aa18f4118aebc16fb07@sentry.io/1280826')
 
 LOGGING = {
     'version': 1,

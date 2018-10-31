@@ -1,0 +1,9 @@
+{% if list_movies %}
+    <ul>
+    {% for movie in list_movies %}
+        <li><a href="{{ movie.torrent_link }}">{{ movie.title }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No movies in this list..</p>
+{% endif %}

@@ -14,11 +14,13 @@ import itertools
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop, TestServer
 from aiohttp.web import HTTPNotFound
 import logging
+import time
 
 
 skip_all = False # True  # to run specific test we just skip all other tests
 
 logging.basicConfig(filename='test_scraping.log', level=logging.DEBUG)
+TEST_SERVER_PORT=4434  # differs from production so we can run tests and production at the same machine simultaniously
 
 
 async def list_handler(request):
@@ -105,13 +107,44 @@ def test_details_url(host, id):
     #assert parsed_url.netloc - could be empty or localhost, or example.com, no feasible way to test
     assert parsed_url.path == '/details.php'
 
+@pytest.mark.skipif(skip_all, reason='Do not test this case')
+def test_extract_episode():
+    scraper = KinozalScraper(f'localhost:{TEST_SERVER_PORT}', max_not_a_robot_delay=0)
+    page_html = open('test/better_call_saul_1.html', 'r').read()
+    movies_count = 0
+    for movie in scraper.extract_episode(page_html, 'fake_url'):
+        movies_count += 1
+        if movies_count == 2:
+            assert movie['title'] == 'Лучше звоните Солу (4 сезон: 1-10 серии из 10) / Better Call Saul / 2018 / ПД (Кубик в Кубе) / WEBRip (720p)'
+            assert movie['details_link'] == '/details.php?id=1638000'
+            assert movie['seeds_num'] == '15'
+            assert movie['size'] == 15190000000
+            assert movie['id'] == 'ktv_1638000'
+            assert movie['last_season'] == 4
+            assert movie['last_episode'] == 10
+            assert movie['seasons'] == [4]
+            assert movie['torrent_link'] == 'http://dl.kinozal.tv/download.php?id=1638000'
+    assert movies_count == 50
 
-class TestScraping(AioHTTPTestCase):
+
+@pytest.mark.skipif(skip_all, reason='Do not test this case')
+def test_extract_details():
+    scraper = KinozalScraper('localhost:4433', max_not_a_robot_delay=0)
+    page_html = open('test/better_call_saul_card_1.html', 'r').read()
+    movie = scraper.extract_details(page_html)
+    assert movie['audio'] == 'Русский (AC3, 6 ch, 640 Кбит/с), английский (E-AC3, 6 ch, 640 Кбит/с)'
+    assert movie['quality'] == 'WEBRip ( 2160p)'
+    assert movie['subtitles'] == 'Русские, английские'
+    assert movie['has_english_subtitles'] == True
+    assert movie['has_english_audio'] == True
+
+
+class TestScrapingAsync(AioHTTPTestCase):
     async def get_application(self):
         return aioapp()
 
     async def get_server(self, app):
-        return TestServer(app, loop=self.loop, host='127.0.0.1', port=4433)
+        return TestServer(app, loop=self.loop, host='127.0.0.1', port=TEST_SERVER_PORT)
 
     """
     aiohttp test case is not pytest, but unittest. 
@@ -121,36 +154,26 @@ class TestScraping(AioHTTPTestCase):
 
     @pytest.mark.skipif(skip_all, reason='Do not test this case')
     @unittest_run_loop
+    async def test_i_am_not_a_robot_delay(self):
+        scraper = KinozalScraper(f'localhost:{TEST_SERVER_PORT}')
+        start = time.time()
+        await scraper.i_am_not_a_robot_delay()
+        assert time.time() - start > 0.009
+
+
+    @pytest.mark.skipif(skip_all, reason='Do not test this case')
+    @unittest_run_loop
     async def test_list_page(self):
-        scraper = KinozalScraper('localhost:4433')
+        scraper = KinozalScraper(f'localhost:{TEST_SERVER_PORT}', max_not_a_robot_delay=0)
         page_count = 0
         async for _ in scraper.list_page(self.search_string):
             page_count += 1
         assert page_count == 3, 'Test web-server returns exactly three pages with search results'
 
     @pytest.mark.skipif(skip_all, reason='Do not test this case')
-    def test_extract_episode(self):
-        scraper = KinozalScraper('localhost:4433')
-        page_html = open('test/better_call_saul_1.html', 'r').read()
-        movies_count = 0
-        for movie in scraper.extract_episode(page_html, 'fake_url'):
-            movies_count += 1
-            if movies_count == 2:
-                assert movie['title'] == 'Лучше звоните Солу (4 сезон: 1-10 серии из 10) / Better Call Saul / 2018 / ПД (Кубик в Кубе) / WEBRip (720p)'
-                assert movie['details_link'] == '/details.php?id=1638000'
-                assert movie['seeds_num'] == '15'
-                assert movie['size'] == 15190000000
-                assert movie['id'] == 'ktv_1638000'
-                assert movie['last_season'] == 4
-                assert movie['last_episode'] == 10
-                assert movie['seasons'] == [4]
-                assert movie['torrent_link'] == 'http://dl.kinozal.tv/download.php?id=1638000'
-        assert movies_count == 50
-
-    @pytest.mark.skipif(skip_all, reason='Do not test this case')
     @unittest_run_loop
     async def test_episodes(self):
-        scraper = KinozalScraper('localhost:4433')
+        scraper = KinozalScraper(f'localhost:{TEST_SERVER_PORT}', max_not_a_robot_delay=0)
         movies_count = 0
         async for movie in scraper.episodes(self.search_string):
             movies_count += 1
@@ -172,20 +195,9 @@ class TestScraping(AioHTTPTestCase):
         assert movies_count == 130
 
     @pytest.mark.skipif(skip_all, reason='Do not test this case')
-    def test_extract_details(self):
-        scraper = KinozalScraper('localhost:4433')
-        page_html = open('test/better_call_saul_card_1.html', 'r').read()
-        movie = scraper.extract_details(page_html)
-        assert movie['audio'] == 'Русский (AC3, 6 ch, 640 Кбит/с), английский (E-AC3, 6 ch, 640 Кбит/с)'
-        assert movie['quality'] == 'WEBRip ( 2160p)'
-        assert movie['subtitles'] == 'Русские, английские'
-        assert movie['has_english_subtitles'] == True
-        assert movie['has_english_audio'] == True
-
-    @pytest.mark.skipif(skip_all, reason='Do not test this case')
     @unittest_run_loop
     async def test_details(self):
-        scraper = KinozalScraper('localhost:4433')
+        scraper = KinozalScraper(f'localhost:{TEST_SERVER_PORT}', max_not_a_robot_delay=0)
         movie = await scraper.details('/details.php?id=1534654')
         assert movie['audio'] == 'AC3, 2 ch, 192 Кбит/с'
         assert movie['has_english_subtitles'] == False
@@ -193,14 +205,14 @@ class TestScraping(AioHTTPTestCase):
     @pytest.mark.skipif(skip_all, reason='Do not test this case')
     @unittest_run_loop
     async def test_find_episodes(self):
-        scraper = KinozalScraper('localhost:4433')
+        scraper = KinozalScraper(f'localhost:{TEST_SERVER_PORT}', max_not_a_robot_delay=0)
         movies_count = 0
         async for movie in scraper.find_episodes(self.search_string, season=3, min_episode=9):
             movies_count += 1
         assert movies_count == 36
 
 def run_fake_web_server():
-    web.run_app(aioapp(), host='127.0.0.1', port=4433)
+    web.run_app(aioapp(), host='127.0.0.1', port=4433)  # the same port as for production for integration tests
 
 
 if __name__ == '__main__':
