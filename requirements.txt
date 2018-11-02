@@ -6,4 +6,5 @@ pytest-aiohttp
 lxml
 channels
 asgi_redis
-raven
+channels_redis
+asgi_redis

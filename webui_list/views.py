@@ -4,6 +4,7 @@ import logging
 import asyncio
 from .models import MovieList, Movie
 from django.template import loader
+from django.shortcuts import render
 
 
 logger = logging.getLogger(__name__)
@@ -26,10 +27,7 @@ def lists(request):
 
 
 def progress(request):
-    template = loader.get_template('progress.html')
-    context = {
-    }
-    return HttpResponse(template.render(context, request))
+    return render(request, 'progress.html', {})
 
 
 def list_movies(request, list_id):

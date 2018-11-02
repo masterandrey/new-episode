@@ -53,6 +53,66 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/../TRegExpr/README.md">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../TRegExpr/src/RegExpr.pas">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../TRegExpr/test/backup/testregexpr.lps">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../TRegExpr/test/tcregexp.pas">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../TRegExpr/test/tcregexp.pp">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../TRegExpr/test/tcregexp_delphi.pas">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../TRegExpr/test/testregexpr.dpr">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../TRegExpr/test/testregexpr.dproj">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../TRegExpr/test/testregexpr.dproj.local">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../TRegExpr/test/testregexpr.lpi">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../TRegExpr/test/testregexpr.lps">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../freepascal/packages/regexpr/src/regexpr.pas">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/../masterandrey.com/posts/ru/_posts/2018-09-20-python_super.md">
           <value>
             <set />
@@ -68,7 +128,47 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/chat/consumers.py">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/chat/routing.py">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/chat/templates/chat/index.html">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/chat/templates/chat/room.html">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/chat/urls.py">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/chat/views.py">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/manage.py">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/reqirement.txt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/requirements.txt">
           <value>
             <set />
           </value>
@@ -123,7 +223,22 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/webui/asgi.py">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/webui/celeryapp.py">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/webui/management/commands/sendtochannel.py">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/webui/routing.py">
           <value>
             <set />
           </value>
@@ -143,12 +258,27 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/webui_list/consumers.py">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/webui_list/management/commands/sendtochannel.py">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/webui_list/migrations/0003_auto_20181031_0822.py">
           <value>
             <set />
           </value>
         </entry>
         <entry key="$PROJECT_DIR$/webui_list/models.py">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/webui_list/routing.py">
           <value>
             <set />
           </value>

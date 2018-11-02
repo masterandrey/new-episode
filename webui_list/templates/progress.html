@@ -7,4 +7,19 @@
     50% Complete (info)
   </div>
 </div>
+<script>
+    var progressSocket = new WebSocket(
+        'ws://' + window.location.host +
+        '/ws/progress');
+
+    progressSocket.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        $('#progress').text(data);
+    };
+
+    progressSocket.onclose = function(e) {
+        console.error('Progress socket closed unexpectedly');
+    };
+
+</script>
 {% endblock %}
