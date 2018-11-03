@@ -8,3 +8,7 @@ channels
 asgi_redis
 channels_redis
 asgi_redis
+social-auth-app-django
+aiohttp_jinja2
+websocket-client
+

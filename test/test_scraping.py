@@ -107,6 +107,7 @@ def test_details_url(host, id):
     #assert parsed_url.netloc - could be empty or localhost, or example.com, no feasible way to test
     assert parsed_url.path == '/details.php'
 
+
 @pytest.mark.skipif(skip_all, reason='Do not test this case')
 def test_extract_episode():
     scraper = KinozalScraper(f'localhost:{TEST_SERVER_PORT}', max_not_a_robot_delay=0)
@@ -214,7 +215,4 @@ class TestScrapingAsync(AioHTTPTestCase):
 def run_fake_web_server():
     web.run_app(aioapp(), host='127.0.0.1', port=4433)  # the same port as for production for integration tests
 
-
-if __name__ == '__main__':
-    run_fake_web_server()
 
