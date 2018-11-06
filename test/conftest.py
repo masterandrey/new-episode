@@ -3,7 +3,10 @@ import subprocess
 import time
 import pytest
 import socket
+import sys
 
+
+PYTHON_COMMAND = f'python{sys.version[:3]}'
 
 @pytest.fixture(scope='session')
 def django_server():
@@ -14,7 +17,7 @@ def django_server():
     env = dict(os.environ, **{'PYTHONUNBUFFERED':'1'})
     host_and_port = '127.0.0.1:8084'
     django_process = subprocess.Popen(
-        ['python3.7', 'manage.py', 'runserver', host_and_port],
+        [PYTHON_COMMAND, 'manage.py', 'runserver', host_and_port],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=env
@@ -66,7 +69,7 @@ def redis_server():
 def fake_kinozal():
     env = dict(os.environ, **{'PYTHONUNBUFFERED':'1'})
     kinozal_process = subprocess.Popen(
-        ['python3.7', 'test/fake_kinozal_server.py'],
+        [PYTHON_COMMAND, 'test/fake_kinozal_server.py'],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=env
