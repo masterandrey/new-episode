@@ -5,4 +5,4 @@
   script:
     - sudo apt-get install -y redis
     - redis-server &
-    - pytest
+    - pytest -s

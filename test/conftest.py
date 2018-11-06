@@ -16,6 +16,7 @@ def django_server():
     """
     env = dict(os.environ, **{'PYTHONUNBUFFERED':'1'})
     host_and_port = '127.0.0.1:8084'
+    print(f'Starting django test server at {host_and_port}')
     django_process = subprocess.Popen(
         [PYTHON_COMMAND, 'manage.py', 'runserver', host_and_port],
         stdout=subprocess.PIPE,
@@ -50,6 +51,7 @@ def redis_server():
     except ConnectionRefusedError:
         assert False, f'Please start local redis server on port {redis_port}'
 
+    print(f'Sending ping to redis server at {redis_ip}:{redis_port}')
     redis_check_command = ['redis-cli', 'PING']
     redis_client_process = subprocess.Popen(
         redis_check_command,
@@ -68,6 +70,7 @@ def redis_server():
 @pytest.fixture(scope='session')
 def fake_kinozal():
     env = dict(os.environ, **{'PYTHONUNBUFFERED':'1'})
+    print(f'Starting kinozal fake server')
     kinozal_process = subprocess.Popen(
         [PYTHON_COMMAND, 'test/fake_kinozal_server.py'],
         stdout=subprocess.PIPE,
