@@ -39,10 +39,14 @@ def django_server():
     s.settimeout(1)
     for count in range(10):
         try:
-            s.connect((host_and_port.split(':')[0], int(host_and_port.split(':')[1])))
+            host = host_and_port.split(':')[0]
+            port = int(host_and_port.split(':')[1])
+            s.connect((host, port))
             break
         except ConnectionRefusedError:
-            assert False, f'Successfully started django server do not respond from {host_and_port}'
+            print(f'Connection to {host}:{port} refused.')
+    else:
+        assert False, f'Successfully started django server do not respond from {host}:{port}.'
 
     yield host_and_port
 
