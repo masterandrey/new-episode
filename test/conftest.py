@@ -31,6 +31,7 @@ def django_server():
     start_time = time.time()
     while not django_ready:
         line = django_process.stdout.readline().decode()
+        print(line)
         django_ready = signature_to_wait_for in line
         assert time.time() - start_time < max_wait_seconds, 'Timeout waiting django server to start'
 
