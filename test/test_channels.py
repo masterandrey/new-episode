@@ -7,9 +7,9 @@ import json
 def test_channels(django_server, redis_server):
     """
     Test django channels.
-    Send message to one chat application websockets and waiting for it in another.
-
-    Listed as parameter fixtures run all the servers necessary for the test
+    * Start django server
+    * open two websocket connections to it
+    * Send message from one websocket connection and wait for it in another.
     """
     def get_message(data: str) -> str:
         try:
@@ -26,5 +26,5 @@ def test_channels(django_server, redis_server):
 
     sent_message = 'Hello, World'
     sender.send(json.dumps({'message': sent_message}))
-    received_message =  get_message(listener.recv())
+    received_message = get_message(listener.recv())
     assert sent_message == received_message
