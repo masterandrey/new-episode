@@ -35,6 +35,13 @@ def django_server():
         django_ready = signature_to_wait_for in line
         assert time.time() - start_time < max_wait_seconds, 'Timeout waiting django server to start'
 
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(5)
+    try:
+        s.connect((host_and_port.split(':')[0], int(host_and_port.split(':')[1])))
+    except ConnectionRefusedError:
+        assert False, f'Successfully started django server do not respond from {host_and_port}'
+
     yield host_and_port
 
     # finalization
