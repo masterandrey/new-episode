@@ -3,7 +3,7 @@ import websocket
 import json
 
 
-@pytest.mark.integration_test
+#@pytest.mark.integration_test
 def test_channels(django_server, redis_server):
     """
     Test django channels.
