@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+from webui.channel_layers_settings import channel_layers_settings
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -119,11 +120,4 @@ STATIC_URL = '/static/'
 #WSGI_APPLICATION = 'webui.wsgi.application'
 ASGI_APPLICATION = 'webui.routing.application'
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
-        },
-    },
-}
+CHANNEL_LAYERS = channel_layers_settings()

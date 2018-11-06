@@ -42,9 +42,6 @@ def django_server():
     for count in range(10):
         try:
             try:
-                #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                #s.settimeout(1)
-                #s.connect((host, port))
                 requests.get(f'http://{host_and_port}', timeout=0.1)
                 print(f'Successfully tested connection to {host}:{port}.')
                 break

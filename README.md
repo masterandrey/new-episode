@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/masterandrey/TRegExpr.png)](https://travis-ci.org/masterandrey/TRegExpr)
+[![Build Status](https://travis-ci.org/masterandrey/new-episode.png)](https://travis-ci.org/masterandrey/new-episode)
 # new-episode
 Scrape data about new episodes of the movies you watch.
 
