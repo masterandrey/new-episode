@@ -36,7 +36,7 @@ def django_server():
         assert time.time() - start_time < max_wait_seconds, 'Timeout waiting django server to start'
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(5)
+    s.settimeout(15)
     try:
         s.connect((host_and_port.split(':')[0], int(host_and_port.split(':')[1])))
     except ConnectionRefusedError:
@@ -53,7 +53,7 @@ def redis_server():
     redis_ip = '127.0.0.1'
     redis_port = 6379
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(0.5)
+    s.settimeout(5)
     try:
         s.connect((redis_ip, redis_port))
     except ConnectionRefusedError:
