@@ -4,6 +4,8 @@ import time
 import pytest
 import socket
 import sys
+import requests
+from requests.exceptions import ConnectionError
 
 
 PYTHON_COMMAND = f'python{sys.version[:3]}'
@@ -39,16 +41,20 @@ def django_server():
     port = int(host_and_port.split(':')[1])
     for count in range(10):
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(1)
-            s.connect((host, port))
-            print(f'Successfully tested connection to {host}:{port}.')
-            break
-        except ConnectionRefusedError:
-            print(f'Connection to {host}:{port} refused.')
+            try:
+                #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                #s.settimeout(1)
+                #s.connect((host, port))
+                requests.get(f'http://{host_and_port}', timeout=0.1)
+                print(f'Successfully tested connection to {host}:{port}.')
+                break
+            except (ConnectionError, ConnectionRefusedError):
+                print(f'Connection to {host}:{port} refused.')
+                time.sleep(1)
+        except Exception as e:
+            print(f'Connection to {host_and_port} exception {e.__class__}:\n{e}')
     else:
-        pass
-        # assert False, f'Successfully started django server do not respond from {host}:{port}.'
+        assert False, f'Successfully started django server do not respond from {host}:{port}.'
 
     yield host_and_port
 
