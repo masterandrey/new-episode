@@ -1,5 +1,6 @@
+[![Build Status](https://travis-ci.org/masterandrey/TRegExpr.png)](https://travis-ci.org/masterandrey/TRegExpr)
 # new-episode
-Scrape data about new episodes of the serial movies you watch.
+Scrape data about new episodes of the movies you watch.
 
 ## Implementation details
 I am using Python 3 with libraries:

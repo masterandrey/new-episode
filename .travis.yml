@@ -1,0 +1,8 @@
+  sudo: required
+  language: python
+  python:
+    - "3.7"
+  script:
+    - sudo apt-get install -y redis
+    - sudo systemctl start redis
+    - pytest
