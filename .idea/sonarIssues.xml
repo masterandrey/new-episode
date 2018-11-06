@@ -163,6 +163,11 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/conftest.py">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/manage.py">
           <value>
             <set />
@@ -209,6 +214,11 @@
           </value>
         </entry>
         <entry key="$PROJECT_DIR$/test/better_call_saul_2.html">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/test/conftest.py">
           <value>
             <set />
           </value>

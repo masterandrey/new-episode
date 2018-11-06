@@ -11,14 +11,20 @@ def test_channels(django_server, redis_server):
 
     Listed as parameter fixtures run all the servers necessary for the test
     """
+    def get_message(data: str) -> str:
+        try:
+            message = json.loads(data)['message']
+        except:
+            assert False, f'Cannot decode message from received data "{data}"'
+        return message
     sender = websocket.create_connection(f'ws://{django_server}/ws/chat/test/')
-    sender_channel_name = sender.recv()
-    print(f'Open sender channel {sender_channel_name}')
+    sender_channel_name = get_message(sender.recv())
+    print(f'Open sender channel "{sender_channel_name}"')
     listener = websocket.create_connection(f'ws://{django_server}/ws/chat/test/')
-    listener_channel_name = listener.recv()
-    print(f'Open listener channel name {listener_channel_name}')
+    listener_channel_name = get_message(listener.recv())
+    print(f'Open listener channel "{listener_channel_name}"')
 
     sent_message = 'Hello, World'
     sender.send(json.dumps({'message': sent_message}))
-    received_message = listener.recv()
-    assert sent_message == json.loads(received_message)['message']
+    received_message =  get_message(listener.recv())
+    assert sent_message == received_message

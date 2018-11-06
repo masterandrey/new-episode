@@ -2,6 +2,7 @@ import os
 import subprocess
 import time
 import pytest
+import socket
 
 
 @pytest.fixture(scope='session')
@@ -37,6 +38,15 @@ def django_server():
 
 @pytest.fixture(scope='session')
 def redis_server():
+    redis_ip = '127.0.0.1'
+    redis_port = 6379
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(0.5)
+    try:
+        s.connect((redis_ip, redis_port))
+    except ConnectionRefusedError:
+        assert False, f'Please start local redis server on port {redis_port}'
+
     redis_check_command = ['redis-cli', 'PING']
     redis_client_process = subprocess.Popen(
         redis_check_command,
@@ -47,7 +57,7 @@ def redis_server():
     assert 'PONG' in out.decode(), \
         f'You should start local redis server.\n"{" ".join(redis_check_command)}" returns\n{out.decode()}'
 
-    yield None  # the tests do not need any server descriptions
+    yield f'{redis_ip}:{redis_port}'
 
     # no finalization needed
 
