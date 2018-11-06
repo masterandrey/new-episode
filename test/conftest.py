@@ -35,13 +35,14 @@ def django_server():
         django_ready = signature_to_wait_for in line
         assert time.time() - start_time < max_wait_seconds, 'Timeout waiting django server to start'
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(1)
+    host = host_and_port.split(':')[0]
+    port = int(host_and_port.split(':')[1])
     for count in range(10):
         try:
-            host = host_and_port.split(':')[0]
-            port = int(host_and_port.split(':')[1])
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1)
             s.connect((host, port))
+            print(f'Successfully tested connection to {host}:{port}.')
             break
         except ConnectionRefusedError:
             print(f'Connection to {host}:{port} refused.')
