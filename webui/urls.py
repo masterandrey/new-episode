@@ -17,11 +17,18 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls import include, url
 from django.views.generic.base import RedirectView
+from django.contrib.auth.views import auth_logout
+from webui_list.views import logout_view
+from django.contrib.auth import urls
+
 
 favicon_view = RedirectView.as_view(url='/static/favicon.ico', permanent=True)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('webui_list.urls')),
     path('favicon\.ico', favicon_view),
-    url(r'^chat/', include('chat.urls')),
+    url('chat/', include('chat.urls')),
+    path('', include('social_django.urls', namespace='social')),
+    #path('logout/', logout_view, {}, name='logout'),
+    url('auth/', include('django.contrib.auth.urls')),
 ]

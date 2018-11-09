@@ -33,14 +33,15 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'channels',
-    'chat',
-    'webui_list.apps.WebuiListConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'social_django',
+    'chat',
+    'webui_list.apps.WebuiListConfig',
 ]
 
 MIDDLEWARE = [
@@ -53,12 +54,27 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '875456301127-vj0t2acof0lhcimdccifeo4b0td4arnu.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'Um_uSvajYQpjFFRWFIH5WlL0'
+
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+
+LOGIN_URL = '/auth/login' # /google-oauth2/
+
+LOGIN_REDIRECT_URL = '/lists'
+LOGOUT_REDIRECT_URL = '/lists'
+
 ROOT_URLCONF = 'webui.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['webui_list/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

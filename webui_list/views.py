@@ -1,15 +1,18 @@
 from django.http import HttpResponse
-from webui_list.scrape_movie import scrape_movie
 import logging
-import asyncio
 from .models import MovieList, Movie
 from django.template import loader
 from django.shortcuts import render
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+import webui.settings
+from django.contrib.auth.decorators import login_required
 
 
 logger = logging.getLogger(__name__)
 
 
+@login_required
 def lists(request):
     #logger.error('from view')
     # #loop = asyncio.get_event_loop()
@@ -30,6 +33,7 @@ def progress(request):
     return render(request, 'progress.html', {})
 
 
+@login_required
 def list_movies(request, list_id):
     """
     List of movies in the movies list
@@ -51,6 +55,11 @@ def list_movies(request, list_id):
     return HttpResponse(template.render(context, request))
 
 
+@login_required
 def details(request, movie_id):
     return HttpResponse(f'details of movie id={movie_id}')
 
+
+def logout_view(request):
+    logout(request)
+    return redirect(webui.settings.LOGOUT_REDIRECT_URL)

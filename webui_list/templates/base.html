@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>new-episode</title>
+</head>
+<body>
+  <div class="jumbotron">
+    {% if user.is_authenticated %}
+      <p>Logged as {{ user.username }}</p>
+      <a class="btn btn-primary" href="{% url 'logout' %}">Logout</a>
+    {% else %}
+      <a class="btn btn-primary" href="{% url 'social:begin' 'google-oauth2' %}">
+        Login
+      </a>
+    {% endif %}
+  </div>
+
+{% block content %}{% endblock %}
+
+</body>
+</html>

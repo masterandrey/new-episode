@@ -13,5 +13,3 @@ social-auth-app-django
 aiohttp_jinja2
 websocket-client
 requests
-
-
